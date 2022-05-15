@@ -152,7 +152,7 @@ class Net:
         self.src_loc = tracer.get_src_loc(1 + src_loc_at)
         if name is not None and not isinstance(name, str):
             raise TypeError("Name must be a string, not {!r}".format(name))
-        self.name = name or tracer.get_var_name(depth=2 + src_loc_at)
+        self.name = name or tracer.get_var_name(depth=2 + src_loc_at, default='NET')
         self._connected = False
 
     def __repr__(self):
