@@ -1,4 +1,5 @@
 from ..lib.generic import Resistor, Capacitor, Transistor
+from ..ast import Net
 from textwrap import dedent
 import jinja2
 
@@ -25,7 +26,7 @@ def read_netlist(netlist):
 
     def _get_name(start):
         return netlist[start:netlist.find(' ', start)].replace('\n', '')
-    
+
     def _get_value(start, end):
         return netlist[netlist.find(' ', start):end].lstrip().replace('"', '').replace('\n', '')
 
@@ -36,7 +37,7 @@ def read_netlist(netlist):
             nodes = {}
         start = None
         opened = 0
-    
+
         for i, (b, idx) in enumerate(brackets):
             if b == '(':
                 opened += 1
@@ -62,7 +63,7 @@ def read_netlist(netlist):
                         value = _get_value(idx_start, idx_end)
                     else:
                         value = _get_tree(brackets[start+1:end])
-    
+
                     if is_list:
                         nodes.append(value)
                     else:
@@ -97,6 +98,7 @@ def generate_netlist(board, components_map=None):
     components_type = set(c.REF for c in board_components.keys())
     current = {t: 1 for t in components_type}
     taken = []
+    taken_names = []
     current_net = 0
 
     def get_ref(component):
@@ -110,20 +112,28 @@ def generate_netlist(board, components_map=None):
                 return ref
 
     def get_net_name(net):
-        nonlocal current_net
-        names = set(n for n in net if isinstance(n, str))
-        assert len(names) <= 1
+        str_names = set(n for n in net if isinstance(n, str))
+        net_names = set(n.name for n in net if isinstance(n, Net))
 
-        if len(names) == 0:
-            name = 'NET' + str(current_net)
-            current_net += 1
-            return name
+        if len(str_names):
+            name = str_names.pop()
+        elif len(net_names):
+            name = net_names.pop()
         else:
-            return names.pop()
+            name = 'NET'
+
+        cnt = 0
+        orig_name = name
+        while name in taken_names:
+            name = orig_name + '_' + str(cnt)
+            cnt += 1
+
+        taken_names.append(name)
+        return name
 
     def get_net_nodes(net):
         return tuple(n for n in net if not isinstance(n, str))
-           
+
     components = {}
 
     if components_map is not None:
