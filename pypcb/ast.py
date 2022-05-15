@@ -98,6 +98,7 @@ class Circuit:
     def get_nets(self, clean_nets=True):
         def reduce(netlist):
             new_netlist =[]
+            reduced = False
             def get_net_index(net):
                 for i, n in enumerate(new_netlist):
                     if net in n:
@@ -113,7 +114,8 @@ class Circuit:
                     new_netlist.append(nets)
                 else:
                     new_netlist[idx] += nets
-            return new_netlist
+                    reduced = True
+            return new_netlist, reduced
 
         def do_clean_nets(netlist):
             return [tuple(set(n for n in node if isinstance(n, (Pad, str)))) for node in netlist]
@@ -122,7 +124,9 @@ class Circuit:
         for circuit_name, circuit in self.subcircuits:
             nets += circuit.get_nets(clean_nets=False)
 
-        netlist = reduce(nets)
+        netlist, reduced = reduce(nets)
+        while reduced:
+            netlist, reduced = reduce(netlist)
 
         if clean_nets:
             netlist = do_clean_nets(netlist)
