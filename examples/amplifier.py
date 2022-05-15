@@ -62,9 +62,9 @@ class MyBoard(Board):
             self.subcircuits[f'common_emmiter{i}'] = c_e
             self.connections += [(vcc, c_e.vcc, 'VCC'), (gnd, c_e.gnd, 'GND')]
 
-        for stage, (left, cap, right) in enumerate(zip(common_emitters, capacitors, common_emitters[1::])):
+        for left, cap, right in zip(common_emitters, capacitors, common_emitters[1::]):
             self.connections += [
-                (left.output, cap.p1, 'STAGE' + str(stage + 1)),
+                (left.output, cap.p1),
                 (cap.p2, right.input),
             ]
 
