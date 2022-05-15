@@ -118,10 +118,8 @@ def generate_netlist(board, components_map=None):
             name = 'NET' + str(current_net)
             current_net += 1
             return name
-        elif len(names) == 1:
-            return names.pop()
         else:
-            raise ValueError('Multiple names for the same net')
+            return names.pop()
 
     def get_net_nodes(net):
         return tuple(n for n in net if not isinstance(n, str))
