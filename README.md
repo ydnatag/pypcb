@@ -1,5 +1,7 @@
 # PYPCB
 
+![lint](https://github.com/andresdemski/pypcb/actions/workflows/lint.yml/badge.svg)
+
 The Hardware design workflow has many issues like:
 * Collaboration
 * Version control
