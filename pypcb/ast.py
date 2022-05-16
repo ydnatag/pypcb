@@ -1,6 +1,7 @@
 from . import tracer
 from collections.abc import Iterable
 
+
 class ConnectionsMannager:
     def __init__(self, circuit):
         self.circuit = circuit
@@ -29,6 +30,7 @@ class ConnectionsMannager:
     def __iter__(self):
         return iter(self._connections)
 
+
 class ComponentsMannager:
     def __init__(self, circuit):
         self.circuit = circuit
@@ -42,7 +44,9 @@ class ComponentsMannager:
             if not isinstance(component, Component):
                 raise ValueError(f'{component} must be a Component')
             if component.name in self._components:
-                raise ValueError(f'Component {component.name} is already in the circuit')
+                raise ValueError(
+                    f'Component {component.name} is already in the circuit'
+                )
 
             self._components[component.name] = component
             component._owner = self.circuit
@@ -50,7 +54,6 @@ class ComponentsMannager:
 
     def __iter__(self):
         return iter(self._components.items())
-        
 
 
 class CircuitMannager:
@@ -97,14 +100,15 @@ class Circuit:
 
     def get_nets(self, clean_nets=True):
         def reduce(netlist):
-            new_netlist =[]
+            new_netlist = []
             reduced = False
+
             def get_net_index(net):
                 for i, n in enumerate(new_netlist):
                     if net in n:
                         return i
                 return None
-        
+
             for nets in netlist:
                 for net in nets:
                     idx = get_net_index(net)
@@ -118,7 +122,10 @@ class Circuit:
             return new_netlist, reduced
 
         def do_clean_nets(netlist):
-            return [tuple(set(n for n in node if isinstance(n, (Pad, str)))) for node in netlist]
+            return [
+                tuple(set(n for n in node if isinstance(n, (Pad, str))))
+                for node in netlist
+            ]
 
         nets = list(self.connections)
         for circuit_name, circuit in self.subcircuits:
@@ -131,13 +138,17 @@ class Circuit:
         if clean_nets:
             netlist = do_clean_nets(netlist)
         return netlist
-        
 
     def get_components(self):
-        components = {component: '/' + name  for name, component in self.components}
+        components = {
+            component: '/' + name for name, component in self.components
+        }
         for circuit_name, circuit in self.subcircuits:
             subcircuit_components = circuit.get_components()
-            components.update({component: '/' + circuit_name + name for component, name in subcircuit_components.items()})
+            components.update({
+                component: '/' + circuit_name + name
+                for component, name in subcircuit_components.items()
+            })
         return components
 
     def build(self):
@@ -146,6 +157,7 @@ class Circuit:
 
 class Board(Circuit):
     pass
+
 
 class Net:
     def __init__(self, *, name=None, src_loc_at=0):
@@ -157,6 +169,7 @@ class Net:
 
     def __repr__(self):
         return self.name + '@' + hex(id(self))
+
 
 class Pad(Net):
     def __init__(self, owner, name, pin):

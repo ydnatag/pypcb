@@ -1,19 +1,22 @@
 import argparse
-import sys
 import os
 from pypcb import Net, Circuit, Board
 from pypcb.lib.generic import Transistor, Resistor, Capacitor, Connector
 from pypcb.back.kicad import generate_netlist, read_netlist
 
+
 class BC548(Transistor):
     footprint = 'Package_TO_SOT_THT:TO-92_Inline'
     value = 'BC548'
 
+
 class Resistor0805(Resistor):
     footprint = 'Resistor_SMD:R_0805_2012Metric'
 
+
 class Capacitor0805(Capacitor):
     footprint = 'Capacitor_SMD:C_0805_2012Metric'
+
 
 class CommonEmitter(Circuit):
     def __init__(self, transistor=Transistor):
@@ -25,8 +28,8 @@ class CommonEmitter(Circuit):
 
         q1 = transistor()
 
-        r1 = Resistor0805(1e3) 
-        r2 = Resistor0805(1e3) 
+        r1 = Resistor0805(1e3)
+        r2 = Resistor0805(1e3)
         rc = Resistor0805(1e3)
 
         self.connections += [
@@ -36,13 +39,14 @@ class CommonEmitter(Circuit):
             (q1.c, rc.p2, self.output),
         ]
 
+
 class PinHeader(Connector):
     _footprint = 'Connector_PinHeader_1.00mm:PinHeader_1x{:02}_P1.00mm_Vertical'
 
     @property
     def footprint(self):
         return self._footprint.format(len(self._pads))
-        
+
 
 class MyBoard(Board):
     def __init__(self):
@@ -99,6 +103,7 @@ def main():
 
     with open(args.file, 'w') as f:
         f.write(netlist)
+
 
 if __name__ == '__main__':
     main()
