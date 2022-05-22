@@ -1,7 +1,8 @@
 from .. import Component, Net
-from pypcb.lib.generic import TransistorBJT, Resistor, Capacitor, Connector
+from pypcb.lib.generic import TransistorBJT, Resistor, Capacitor
 import subprocess
 import numpy as np
+
 
 class NgSpice:
     def __init__(self, circuit, gnd):
@@ -74,10 +75,19 @@ class NgSpice:
         )
         stdout, stderr = process.communicate(spice.encode('utf-8'))
         if process.returncode:
-            raise RuntineError('Error running ngpsice')
+            print(spice.encode('utf-8'))
+            raise RuntimeError('Error running ngpsice')
         data = stdout.split(b'Binary:\n')[1]
         data = np.frombuffer(data, dtype=np.float64)
         return data
+
+    @staticmethod
+    def get_variables(data, variables):
+        n_variables = len(variables)
+        rv = {}
+        for i, v in enumerate(variables):
+            rv[v] = data[i::n_variables]
+        return rv
 
     def dcsweep(self, sweep, trace=None):
         dc_cmd = ['.dc']
@@ -97,22 +107,30 @@ class NgSpice:
             ' '.join(dc_cmd),
             ".end",
         ])
+
         data = self.run(spice)
-        traced = len(sweep)
-        if trace is not None:
-            traced += len(trace)
+        return self.get_variables(data, [s[0] for s in sweep] + list(trace))
 
-        rv = {}
-        for i, (v, _) in enumerate(sweep):
-            rv[v] = data[i::traced]
+    def transient(self, step, stop, units='ns', trace=None):
+        assert units in ['ns', 'us', 'ms', 's']
 
-        for i, t in enumerate(trace):
-            rv[t] = data[i+len(sweep)::traced]
-        return rv
+        tran_cmd = f'.tran {step}{units} {stop}{units}'
+        spice = '\n'.join([
+            'test -s',
+            self.circuit,
+            self.get_dot_save(trace),
+            tran_cmd,
+            ".end",
+        ])
+
+        data = self.run(spice)
+        variables = ['time'] + list(trace)
+        return self.get_variables(data, variables)
 
 
 class VoltageSource(Component):
     REF = 'V'
+
     def __init__(self, value, *, name=None, src_loc_at=0):
         super().__init__(name=name, src_loc_at=src_loc_at + 1)
         self.value = value
