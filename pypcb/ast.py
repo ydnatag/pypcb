@@ -24,7 +24,7 @@ class ConnectionsMannager:
                             if not net._owner._owner:
                                 self.circuit.components += net._owner
                 else:
-                    raise ValueError(f'{connection}')
+                    raise ValueError(f'Trying to connect {connection}. Invalid types: {[c.__class__.__name__ for c in connection]}')
             return self
 
     def __iter__(self):
@@ -78,7 +78,7 @@ class Component:
         self.src_loc = tracer.get_src_loc(1 + src_loc_at)
         if name is not None and not isinstance(name, str):
             raise TypeError("Name must be a string, not {!r}".format(name))
-        self.name = name or tracer.get_var_name(depth=2 + src_loc_at)
+        self.name = name or tracer.get_var_name(depth=2 + src_loc_at, default=self.__class__.__name__)
         self._owner = None
         self._pads = []
 
