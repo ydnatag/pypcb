@@ -180,3 +180,40 @@ class Pad(Net):
 
     def __repr__(self):
         return str(self._owner) + '.' + self.name + '@' + hex(id(self))
+
+
+class Ground(Net):
+    pass
+
+
+class Power(Net):
+    pass
+
+
+class Harness:
+    def __init__(self, **layout):
+        self.layout = layout
+
+    def connect(self, other):
+        connections = []
+        for k, v in self.layout.items():
+            if isinstance(v, Net):
+                connections.append((v, other.layout[k]))
+            elif isinstance(v, Harness):
+                connections.extend(v.connect(other.layout[k]))
+            else:
+                raise RuntimeError()
+        return connections
+
+    def __repr__(self):
+        return '{' + f', '.join([f'{t}: {p}' for t, p in self.layout.items()]) + '}'
+
+
+class DiffPair(Harness):
+    def __init__(self, p, n):
+        super().__init__(p=p, n=n)
+
+    def connect(self, other):
+        connections = super().connect(other)
+        # for c in connections: apply diff rule
+        return connections
